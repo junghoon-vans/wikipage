@@ -2,4 +2,4 @@
 Wikipage
 ========
 
-Wikipage is a simple wiki page written in Python using the FastAPI framework.
+Wikipage is a simple wiki page built with FastAPI and Svelte.
