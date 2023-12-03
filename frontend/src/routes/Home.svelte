@@ -13,6 +13,6 @@
 <div>
     {#each posts as post (post.id)}
     <h2>{post.title}</h2>
-    <p>{post.content}</p>
+    <p>{post.created_at}</p>
     {/each}
 </div>

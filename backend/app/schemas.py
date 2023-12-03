@@ -1,11 +1,17 @@
+from datetime import datetime
+
 from pydantic import BaseModel
+from pydantic import ConfigDict
 
 
-class PostCreate(BaseModel):
+class PostBase(BaseModel):
+    model_config = ConfigDict(from_attributes=True)
     title: str
+
+
+class PostCreate(PostBase):
     content: str
 
 
-class PostList(BaseModel):
-    title: str
-    created_at: str
+class PostList(PostBase):
+    created_at: datetime
