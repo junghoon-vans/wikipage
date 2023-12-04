@@ -5,7 +5,7 @@ from sqlalchemy import DateTime
 from sqlalchemy import Integer
 from sqlalchemy import String
 
-from .database import Base
+from app.database import Base
 
 
 class Post(Base):
