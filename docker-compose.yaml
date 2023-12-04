@@ -3,10 +3,12 @@ version: '3'
 services:
   backend:
     build: ./backend
+    depends_on:
+      - db
     ports:
       - "8000:80"
     env_file:
-      - ./backend/.env.example
+      - .env.example
 
   frontend:
     build: ./frontend
@@ -14,3 +16,18 @@ services:
       - "80:80"
     env_file:
       - ./frontend/.env.example
+
+  db:
+    image: postgres:16
+    volumes:
+      - postgres_db:/var/lib/postgresql/data
+    env_file:
+      - .env.example
+    environment:
+      - PGDATA=/var/lib/postgresql/data/pgdata
+
+volumes:
+  postgres_db:
+
+networks:
+  default:
