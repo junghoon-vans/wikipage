@@ -1,9 +1,10 @@
 <script>
     import { onMount } from "svelte";
+
     let posts = [];
 
     async function fetchPosts() {
-        const res = await fetch("http://localhost:8000/posts/");
+        const res = await fetch(import.meta.env.VITE_API_URL + "/posts/");
         posts = await res.json();
     }
 

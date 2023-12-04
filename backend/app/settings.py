@@ -5,9 +5,6 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = [
-        "http://localhost:5173",
-    ]
-
+    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] = []
 
 settings = Settings()
