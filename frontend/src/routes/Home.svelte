@@ -1,14 +1,25 @@
 <script>
     import { onMount } from "svelte";
+    import axios from "axios";
 
     let posts = [];
 
-    async function fetchPosts() {
-        const res = await fetch(import.meta.env.VITE_API_URL + "/posts/");
-        posts = await res.json();
-    }
+    const client = axios.create({
+        baseURL: import.meta.env.VITE_API_URL,
+        headers: {
+            'Content-Type': 'application/json',
+        },
+    })
 
-    onMount(fetchPosts);
+    onMount(async () => {
+        try {
+            const res = await client.get("/posts/");
+            posts = res.data;
+            console.log("test" + res.data);
+        } catch (error) {
+            console.error("Error fetching data:", error);
+        }
+    });
 </script>
 
 <div class="flex flex-col">
