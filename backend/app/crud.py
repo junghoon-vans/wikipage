@@ -1,7 +1,6 @@
-from sqlalchemy.orm import Session
-
 from app import models
 from app import schemas
+from sqlalchemy.orm import Session
 
 
 def create_post(db: Session, post: schemas.PostCreate) -> models.Post:
