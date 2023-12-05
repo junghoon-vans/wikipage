@@ -1,11 +1,12 @@
 <script>
     import { onMount } from "svelte";
+    import { PUBLIC_BASE_URL } from '$env/static/public';
     import axios from "axios";
 
     let posts = [];
 
     const client = axios.create({
-        baseURL: import.meta.env.VITE_API_URL,
+        baseURL: PUBLIC_BASE_URL,
         headers: {
             'Content-Type': 'application/json',
         },
