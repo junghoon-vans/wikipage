@@ -36,7 +36,7 @@ def get_posts(es: Elasticsearch) -> list[schemas.PostList]:
     :return: the posts
     """
     res = es.search(index="wiki.public.posts", query={"match_all": {}})
-    return [hit["_source"] for hit in res["hits"]["hits"]]
+    return [schemas.PostList.model_validate(hit["_source"]) for hit in res["hits"]["hits"]]
 
 
 def update_post(db: Session, post_id: int, post: schemas.PostCreate) -> models.Post:
