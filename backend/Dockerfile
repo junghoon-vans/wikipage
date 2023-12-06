@@ -12,6 +12,9 @@ COPY ./pyproject.toml ./poetry.lock* /app/
 
 RUN bash -c "poetry install --no-root --only main"
 
+# Copy the init sql
+COPY ./init_table.sql /app/
+
 # Copy the app code
 COPY . /app
 ENV PYTHONPATH=/app
