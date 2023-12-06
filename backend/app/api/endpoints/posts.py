@@ -2,6 +2,7 @@ from app import crud
 from app import schemas
 from app.api.deps import get_db
 from app.api.deps import get_es
+from elasticsearch import Elasticsearch
 from fastapi import APIRouter
 from fastapi import Depends
 from sqlalchemy.orm import Session
@@ -11,12 +12,12 @@ router = APIRouter()
 
 
 @router.get("{post_id}")
-def get_post(post_id: int, es: Session = Depends(get_es)):
+def get_post(post_id: int, es: Elasticsearch = Depends(get_es)):
     return crud.get_post(es, post_id)
 
 
 @router.get("")
-def get_posts(es: Session = Depends(get_es)):
+def get_posts(es: Elasticsearch = Depends(get_es)):
     return crud.get_posts(es)
 
 
