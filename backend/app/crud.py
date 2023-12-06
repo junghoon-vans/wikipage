@@ -1,5 +1,6 @@
 from app import models
 from app import schemas
+from elasticsearch import Elasticsearch
 from sqlalchemy.orm import Session
 
 
@@ -17,24 +18,25 @@ def create_post(db: Session, post: schemas.PostCreate) -> models.Post:
     return db_post
 
 
-def get_post(db: Session, post_id: int) -> models.Post:
+def get_post(es: Elasticsearch, post_id: int) -> models.Post:
     """
     Get a post from the database.
-    :param db: database session
+    :param es: elasticsearch session
     :param post_id: the id of the post to retrieve
     :return: the post if it exists
     """
-    return db.query(models.Post).get(post_id)
+    res = es.get(index="wiki.public.posts", id=post_id)
+    return res["_source"]
 
 
-def get_posts(db: Session) -> list[schemas.PostList]:
+def get_posts(es: Elasticsearch) -> list[schemas.PostList]:
     """
     Get all posts from the database.
-    :param db: database session
+    :param es: elasticsearch session
     :return: the posts
     """
-    db_posts = db.query(models.Post).all()
-    return [schemas.PostList.model_validate(post) for post in db_posts]
+    res = es.search(index="wiki.public.posts", query={"match_all": {}})
+    return [schemas.PostList.model_validate(hit["_source"]) for hit in res["hits"]["hits"]]
 
 
 def update_post(db: Session, post_id: int, post: schemas.PostCreate) -> models.Post:

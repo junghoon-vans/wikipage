@@ -1,4 +1,4 @@
-from app.router import router
+from app.api import api_router
 from app.settings import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,4 +15,4 @@ if settings.BACKEND_CORS_ORIGINS:
         allow_headers=["*"],
     )
 
-app.include_router(router)
+app.include_router(api_router)

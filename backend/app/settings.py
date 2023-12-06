@@ -42,5 +42,7 @@ class Settings(BaseSettings):
             path=f"{info.data.get('POSTGRES_DB') or ''}",
         )
 
+    ELASTICSEARCH_HOSTS: str
+
 
 settings = Settings()

@@ -1,5 +1,3 @@
-from datetime import datetime
-
 from pydantic import BaseModel
 from pydantic import ConfigDict
 
@@ -14,4 +12,4 @@ class PostCreate(PostBase):
 
 
 class PostList(PostBase):
-    created_at: datetime
+    created_at: int
