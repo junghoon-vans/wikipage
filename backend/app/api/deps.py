@@ -1,5 +1,6 @@
 from app.database import SessionLocal
-
+from app.settings import settings
+from elasticsearch import Elasticsearch
 
 def get_db():
     db = SessionLocal()
@@ -7,3 +8,11 @@ def get_db():
         yield db
     finally:
         db.close()
+
+
+def get_es():
+    es = Elasticsearch(settings.ELASTICSEARCH_HOSTS)
+    try:
+        yield es
+    finally:
+        es.close()
