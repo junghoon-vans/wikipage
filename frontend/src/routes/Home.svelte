@@ -14,9 +14,8 @@
 
     onMount(async () => {
         try {
-            const res = await client.get("/posts/");
+            const res = await client.get("/posts");
             posts = res.data;
-            console.log("test" + res.data);
         } catch (error) {
             console.error("Error fetching data:", error);
         }
@@ -32,11 +31,11 @@
                         <thead class="bg-gray-50">
                             <tr>
                                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Content</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            {#each posts as post (post.id)}
+                            {#each posts as post}
                                 <tr>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-900">
@@ -45,7 +44,7 @@
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div class="text-sm text-gray-500">
-                                            {post.content}
+                                            {new Date(post.created_at / 1000).toLocaleString()}
                                         </div>
                                     </td>
                                 </tr>
