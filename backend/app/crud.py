@@ -83,28 +83,7 @@ def get_related_posts(es: Elasticsearch, post_id: int) -> list[schemas.PostList]
     if (posts_count < 2):
         return []
 
-    current_post = es.get(index=posts_index, id=post_id)['_source']
-    current_post_terms = set(current_post['content'].split())
-
-    # Step 1: Get terms with a frequency of 60% or less than the total number of posts
-    posts = es.search(
-        index=posts_index,
-        body={
-            "query": {
-                "more_like_this": {
-                    "fields": ["content"],
-                    "like": [
-                        {
-                            "_id": post_id,
-                        },
-                    ],
-                    "min_term_freq": 1,
-                    "min_doc_freq": 1,
-                    "max_doc_freq": round(posts_count * 0.6),
-                },
-            },
-        },
-    )
+    posts = _more_like_posts(es, post_id, round(posts_count * 0.6))
 
     if (posts['hits']['total']['value'] == 0):
         return []
@@ -117,20 +96,62 @@ def get_related_posts(es: Elasticsearch, post_id: int) -> list[schemas.PostList]
     total_terms = list(filter(lambda x: total_terms.count(x) <= posts_count * 0.4, total_terms))
 
     # Filter out terms that appear in the current post
+    current_post = es.get(index=posts_index, id=post_id)['_source']
+    current_post_terms = set(current_post['content'].split())
     terms = list(filter(lambda x: x in current_post_terms, total_terms))
 
+    res = _get_posts_with_terms(es, post_id, set(terms), 2)
 
-    # Step 2: Get posts that contain at least two of the terms
-    res = es.search(
+    return [schemas.PostList.model_validate(hit["_source"]) for hit in res["hits"]["hits"]]
+
+
+def _more_like_posts(es: Elasticsearch, id: int, max_doc_freq: int):
+    """
+    Get posts that are more like the post with the given id from the elasticsearch.
+
+    :param es: elasticsearch session
+    :param id: the id of the post to retrieve
+    :param max_doc_freq: the max doc freq to match
+    """
+    return es.search(
+        index=posts_index,
+        body={
+            "query": {
+                "more_like_this": {
+                    "fields": ["content"],
+                    "like": [
+                        {
+                            "_id": id,
+                        },
+                    ],
+                    "min_term_freq": 1,
+                    "min_doc_freq": 1,
+                    "max_doc_freq": round(max_doc_freq),
+                },
+            },
+        },
+    )
+
+
+def _get_posts_with_terms(es: Elasticsearch, id: int, terms: set[str], match_count: int):
+    """
+    Get posts with terms from the elasticsearch.
+    
+    :param es: elasticsearch session
+    :param id: the id of the post to retrieve
+    :param terms: the terms to match
+    :param match_count: the number of terms to match
+    """
+    return es.search(
         index=posts_index, body={
             "query": {
                 "bool": {
-                    "should": [{"match": {"content": term}} for term in set(terms)],
-                    "minimum_should_match": 2,
+                    "should": [{"match": {"content": term}} for term in terms],
+                    "minimum_should_match": match_count,
                     "must_not": [
                         {
                             "ids": {
-                                "values": [post_id],
+                                "values": [id],
                             },
                         },
                     ],
@@ -141,5 +162,3 @@ def get_related_posts(es: Elasticsearch, post_id: int) -> list[schemas.PostList]
             ],
         },
     )
-
-    return [schemas.PostList.model_validate(hit["_source"]) for hit in res["hits"]["hits"]]
