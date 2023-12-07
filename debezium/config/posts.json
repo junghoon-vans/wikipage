@@ -8,22 +8,11 @@
                 "type": "integer"
             },
             "title": {
-                "type": "text",
-                "fields": {
-                    "keyword": {
-                        "type": "keyword",
-                        "ignore_above": 256
-                    }
-                }
+                "type": "text"
             },
             "content": {
                 "type": "text",
-                "fields": {
-                    "keyword": {
-                        "type": "keyword",
-                        "ignore_above": 256
-                    }
-                }
+                "term_vector": "yes"
             },
             "created_at": {
                 "type": "date"

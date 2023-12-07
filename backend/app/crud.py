@@ -4,6 +4,8 @@ from elasticsearch import Elasticsearch
 from sqlalchemy.orm import Session
 
 
+posts_index = "wiki.public.posts"
+
 def create_post(db: Session, post: schemas.PostCreate) -> models.Post:
     """
     Create a new post in the database.
@@ -25,7 +27,7 @@ def get_post(es: Elasticsearch, post_id: int) -> models.Post:
     :param post_id: the id of the post to retrieve
     :return: the post if it exists
     """
-    res = es.get(index="wiki.public.posts", id=post_id)
+    res = es.get(index=posts_index, id=post_id)
     return res["_source"]
 
 
@@ -35,7 +37,7 @@ def get_posts(es: Elasticsearch) -> list[schemas.PostList]:
     :param es: elasticsearch session
     :return: the posts
     """
-    res = es.search(index="wiki.public.posts", query={"match_all": {}})
+    res = es.search(index=posts_index, query={"match_all": {}})
     return [schemas.PostList.model_validate(hit["_source"]) for hit in res["hits"]["hits"]]
 
 
@@ -66,3 +68,78 @@ def delete_post(db: Session, post_id: int) -> models.Post:
     db.delete(db_post)
     db.commit()
     return db_post
+
+
+def get_related_posts(es: Elasticsearch, post_id: int) -> list[schemas.PostList]:
+    """
+    Get related posts from the elasticsearch.
+
+    :param es: elasticsearch session
+    :param post_id: the id of the post to retrieve
+    :return: the posts
+    """
+    posts_count = es.count(index=posts_index, body={"query": {"match_all": {}}})["count"]
+
+    if (posts_count < 2):
+        return []
+
+    current_post = es.get(index=posts_index, id=post_id)['_source']
+    current_post_terms = set(current_post['content'].split())
+
+    # Step 1: Get terms with a frequency of 60% or less than the total number of posts
+    posts = es.search(
+        index=posts_index,
+        body={
+            "query": {
+                "more_like_this": {
+                    "fields": ["content"],
+                    "like": [
+                        {
+                            "_id": post_id,
+                        },
+                    ],
+                    "min_term_freq": 1,
+                    "min_doc_freq": 1,
+                    "max_doc_freq": round(posts_count * 0.6),
+                },
+            },
+        },
+    )
+
+    if (posts['hits']['total']['value'] == 0):
+        return []
+
+    total_terms = []
+    for post in posts['hits']['hits']:
+        total_terms += post['_source']['content'].split()
+    
+    # Filter out terms that appear in more than 40% of the total terms
+    total_terms = list(filter(lambda x: total_terms.count(x) <= posts_count * 0.4, total_terms))
+
+    # Filter out terms that appear in the current post
+    terms = list(filter(lambda x: x in current_post_terms, total_terms))
+
+
+    # Step 2: Get posts that contain at least two of the terms
+    res = es.search(
+        index=posts_index, body={
+            "query": {
+                "bool": {
+                    "should": [{"match": {"content": term}} for term in set(terms)],
+                    "minimum_should_match": 2,
+                    "must_not": [
+                        {
+                            "ids": {
+                                "values": [post_id],
+                            },
+                        },
+                    ],
+                },
+            },
+            "sort": [
+                {"_score": {"order": "desc"}},
+            ],
+        },
+    )
+
+    return [schemas.PostList.model_validate(hit["_source"]) for hit in res["hits"]["hits"]]
