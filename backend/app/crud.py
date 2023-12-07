@@ -4,8 +4,6 @@ from elasticsearch import Elasticsearch
 from sqlalchemy.orm import Session
 
 
-posts_index = "wiki.public.posts"
-
 def create_post(db: Session, post: schemas.PostCreate) -> models.Post:
     """
     Create a new post in the database.
@@ -18,28 +16,6 @@ def create_post(db: Session, post: schemas.PostCreate) -> models.Post:
     db.commit()
     db.refresh(db_post)
     return db_post
-
-
-def get_post(es: Elasticsearch, post_id: int) -> models.Post:
-    """
-    Get a post from the database.
-    :param es: elasticsearch session
-    :param post_id: the id of the post to retrieve
-    :return: the post if it exists
-    """
-    res = es.get(index=posts_index, id=post_id)
-    return res["_source"]
-
-
-def get_posts(es: Elasticsearch) -> list[schemas.PostList]:
-    """
-    Get all posts from the database.
-    :param es: elasticsearch session
-    :return: the posts
-    """
-    res = es.search(index=posts_index, query={"match_all": {}})
-    return [schemas.PostList.model_validate(hit["_source"]) for hit in res["hits"]["hits"]]
-
 
 def update_post(db: Session, post_id: int, post: schemas.PostCreate) -> models.Post:
     """
@@ -68,6 +44,29 @@ def delete_post(db: Session, post_id: int) -> models.Post:
     db.delete(db_post)
     db.commit()
     return db_post
+
+
+posts_index = "wiki.public.posts"
+
+def get_post(es: Elasticsearch, post_id: int) -> models.Post:
+    """
+    Get a post from the elasticsearch.
+    :param es: elasticsearch session
+    :param post_id: the id of the post to retrieve
+    :return: the post if it exists
+    """
+    res = es.get(index=posts_index, id=post_id)
+    return res["_source"]
+
+
+def get_posts(es: Elasticsearch) -> list[schemas.PostList]:
+    """
+    Get all posts from the elasticsearch.
+    :param es: elasticsearch session
+    :return: the posts
+    """
+    res = es.search(index=posts_index, query={"match_all": {}})
+    return [schemas.PostList.model_validate(hit["_source"]) for hit in res["hits"]["hits"]]
 
 
 def get_related_posts(es: Elasticsearch, post_id: int) -> list[schemas.PostList]:
