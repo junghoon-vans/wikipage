@@ -1,7 +1,7 @@
 from typing import List
 from typing import Optional
+from typing import Union
 
-from pydantic import AnyHttpUrl
 from pydantic import field_validator
 from pydantic import PostgresDsn
 from pydantic import ValidationInfo
@@ -9,12 +9,11 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    BACKEND_CORS_ORIGINS: List[AnyHttpUrl] | str = []
+    BACKEND_CORS_ORIGINS: Union[List[str], str] = []
 
     @field_validator("BACKEND_CORS_ORIGINS", mode='before')
     @classmethod
-    def assemble_cors_origins(cls, v: Optional[str])\
-            -> Optional[List[AnyHttpUrl]] | str:
+    def assemble_cors_origins(cls, v: Union[List[str], str]) -> Union[List[str], str]:
         if isinstance(v, str) and not v.startswith("["):
             return [i.strip() for i in v.split(",")]
         elif isinstance(v, (list, str)):
