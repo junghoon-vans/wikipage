@@ -34,3 +34,8 @@ def update_post(post_id: int, post: schemas.PostCreate, db: Session = Depends(ge
 @router.delete("/{post_id}")
 def delete_post(post_id: int, db: Session = Depends(get_db)):
     return crud.delete_post(db, post_id)
+
+
+@router.get("/related/{post_id}")
+def get_related_posts(post_id: int, es: Elasticsearch = Depends(get_es)):
+    return crud.get_related_posts(es, post_id)
